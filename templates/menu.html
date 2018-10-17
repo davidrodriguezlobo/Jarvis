@@ -1,0 +1,23 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+
+<h1>MENU</h1>
+
+<h3>BIENVENIDO {{session.username}}</h3>
+
+<div class="container">
+    <div class="row">
+      <div class="col-sm">
+        <a href="/posts" class="btn btn-outline-primary">Posts</a>
+      </div>
+      <div class="col-sm">
+        <a href="/comments" class="btn btn-primary btn-lg">Comments</a>
+      </div>
+      <div class="col-sm">
+        <a href="/score" class="btn btn-primary btn-lg">Analyze</a>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}

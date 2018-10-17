@@ -1,0 +1,2 @@
+$env:GOOGLE_APPLICATION_CREDENTIALS="C:\Users\David\Desktop\automl\key.json"
+python automl_natural_language_predict.py predict $MODEL_ID "text.txt"

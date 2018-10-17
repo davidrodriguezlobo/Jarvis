@@ -1,0 +1,6 @@
+Flask_MySQLdb==0.2.0
+passlib==1.7.1
+requests==2.19.1
+WTForms==2.2.1
+Flask==1.0.2
+protobuf==3.6.1
