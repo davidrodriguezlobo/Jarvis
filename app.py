@@ -109,7 +109,7 @@ def menu():
 def posts():
 
     #Token Temporal
-    token = 'EAAIPgJKNjsgBAMMYFgAiY1wHJyIWzP1PK0cvmkGZBfN72McbiOEX8zOjbdlpYXwDKO3FwPZC1Amofl66zGcZCeRbaknaUPNQHQN6ZBPKpcnZCGWkH8SPHv16oudct6qB11sXQxuQFZBqt7oxE6NBeWZCzDpuxq8xrV6HeqEZAfyLjTinL2UnejXJVNkbvpxz8LJ2DC6zwcWItpZBoJjdycCvVEvZBLOUf1w2yr1dLfnlzYowZDZD'
+    token = 'EAAIPgJKNjsgBAEZCGQLXDXbXQ7l4ZC4UxnWYKyDNPR3nuR6Ob8ORQoBhGKw4Kmhv7ZBIlXcCgIoUjjsdkCLQz8p1NY0LrmQSSTL7jXsEWnM3lOoZBCujCiyFor7smS1plLBKCLmQ8ZA0zDuP8agnM4MuMStxZATzYZD'
     
     #ID de Pagina, posiblemente se relacione con un textbox en interfaz para ingresarlo
     pageid = '433695893782683'
@@ -187,7 +187,7 @@ def comment():
         postid = x['postid']
         
 
-        token = 'EAAIPgJKNjsgBAMMYFgAiY1wHJyIWzP1PK0cvmkGZBfN72McbiOEX8zOjbdlpYXwDKO3FwPZC1Amofl66zGcZCeRbaknaUPNQHQN6ZBPKpcnZCGWkH8SPHv16oudct6qB11sXQxuQFZBqt7oxE6NBeWZCzDpuxq8xrV6HeqEZAfyLjTinL2UnejXJVNkbvpxz8LJ2DC6zwcWItpZBoJjdycCvVEvZBLOUf1w2yr1dLfnlzYowZDZD'
+        token = 'EAAIPgJKNjsgBAEZCGQLXDXbXQ7l4ZC4UxnWYKyDNPR3nuR6Ob8ORQoBhGKw4Kmhv7ZBIlXcCgIoUjjsdkCLQz8p1NY0LrmQSSTL7jXsEWnM3lOoZBCujCiyFor7smS1plLBKCLmQ8ZA0zDuP8agnM4MuMStxZATzYZD'
 
         url = 'https://graph.facebook.com/v3.1/'+postid+'?fields=comments&access_token='+token
 
