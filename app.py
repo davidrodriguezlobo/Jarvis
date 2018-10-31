@@ -7,7 +7,7 @@ import json
 import requests as rqst
 from google.cloud import automl_v1beta1 as automl
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/static')
 
 #MySQL Config
 
@@ -21,45 +21,7 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 mysql = MySQL(app)
 
-@app.route('/')
-def index():
-    return render_template('home.html')
-
-
-class RegisterForm(Form):
-    name = StringField('Name', [validators.length(min=1, max=50)])
-    username = StringField('Username', [validators.length(min=4, max=25)])
-    email = StringField('Email', [validators.length(min=6, max=50)])
-    password = PasswordField('Password', [
-        validators.DataRequired(),
-        validators.EqualTo('confirm', message='Passwords do not match')
-    ])
-    confirm = PasswordField('Confirm Password')
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    form = RegisterForm(request.form)
-    if request.method == 'POST' and form.validate():
-        name = form.name.data
-        email = form.email.data
-        username = form.username.data
-        password = sha256_crypt.encrypt(str(form.password.data))
-
-        cur = mysql.connection.cursor()
-
-        cur.execute("INSERT INTO tbl_users(name, email, username, password) VALUES(%s, %s, %s, %s)", (name, email, username, password))
-
-        mysql.connection.commit()
-
-        cur.close()
-
-        flash('Gracias por registrarte!', 'success')
-
-        return redirect(url_for('login'))
-    return render_template('register.html', form=form)
-
-
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
 
@@ -98,6 +60,40 @@ def login():
         #Close COnnection
         cur.close()
     return render_template('login.html')
+
+
+class RegisterForm(Form):
+    name = StringField('Name', [validators.length(min=1, max=50)])
+    username = StringField('Username', [validators.length(min=4, max=25)])
+    email = StringField('Email', [validators.length(min=6, max=50)])
+    password = PasswordField('Password', [
+        validators.DataRequired(),
+        validators.EqualTo('confirm', message='Passwords do not match')
+    ])
+    confirm = PasswordField('Confirm Password')
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    form = RegisterForm(request.form)
+    if request.method == 'POST' and form.validate():
+        name = form.name.data
+        email = form.email.data
+        username = form.username.data
+        password = sha256_crypt.encrypt(str(form.password.data))
+
+        cur = mysql.connection.cursor()
+
+        cur.execute("INSERT INTO tbl_users(name, email, username, password) VALUES(%s, %s, %s, %s)", (name, email, username, password))
+
+        mysql.connection.commit()
+
+        cur.close()
+
+        flash('Gracias por registrarte!', 'success')
+
+        return redirect(url_for('login'))
+    return render_template('register.html', form=form)
+
 
 @app.route('/menu')
 def menu():
