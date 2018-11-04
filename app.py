@@ -4,6 +4,7 @@ from wtforms import Form, StringField, TextAreaField, PasswordField, validators
 from passlib.hash import sha256_crypt
 import datetime
 import json
+import datetime, calendar
 import requests as rqst
 from google.cloud import automl_v1beta1 as automl
 
@@ -13,8 +14,8 @@ app = Flask(__name__, static_url_path='/static')
 
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = '123456'
-#app.config['MYSQL_PASSWORD'] = '1234'
+#app.config['MYSQL_PASSWORD'] = '123456'
+app.config['MYSQL_PASSWORD'] = '1234'
 #app.config['MYSQL_PASSWORD'] = 'root'
 app.config['MYSQL_DB'] = 'app'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
@@ -316,14 +317,26 @@ def graph(chartID = 'chart_ID', chart_type = 'line', chart_height = 500):
     cur = mysql.connection.cursor()
     cur.execute("SELECT count(*) FROM app.tbl_comments")
     prueba = cur.fetchall()
+    cur.execute("select max(day(commentdate))  from  app.tbl_comments where month(commentdate) = month( curdate())-1")
+    prueba2 = cur.fetchall()
     cur.close()
+    #now = datetime.datetime.now()
+    #year = now.year
+    #month = now.month
+    #num_days = calendar.monthrange(year, month)[1]
+    #days = [datetime.date(year, month, day) for day in range(1, num_days+1)]
+    #print(days)
     #print(prueba) -- Imprime lo que actualmente trae la consulta de la BD.
+    for y in prueba2:
+        count2 = y['max(day(commentdate))']    
+        #print(count2)
+        i = [1,2,3,4,5,6,7,8,9,10]
     for x in prueba: #x puede ser cualquier cosa. "Prueba" es la variable en donde guardás la query.
         count = x['count(*)'] #Descompone el diccionario que viene de la BD según el KEY que este trae. Imprimir "Prueba" para conocer los KEYS.
         chart = {"renderTo": chartID, "type": chart_type, "height": chart_height,}
         series = [{"name": 'Label1', "data": [1,2,3]}, {"name": 'Label2', "data": [count, count]}]
         title = {"text": 'My Title'}
-        xAxis = {"categories": ['xAxis Data1', 'xAxis Data2', 'xAxis Data3']}
+        xAxis = {"categories": [1]}
         yAxis = {"title": {"text": 'yAxis Label'}}
         return render_template('dash.html', chartID=chartID, chart=chart, series=series, title=title, xAxis=xAxis, yAxis=yAxis)
 
