@@ -13,7 +13,7 @@ app = Flask(__name__, static_url_path='/static')
 
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = '123456'
+app.config['MYSQL_PASSWORD'] = '1234'
 app.config['MYSQL_DB'] = 'app'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
@@ -98,6 +98,7 @@ def register():
 @app.route('/menu')
 def menu():
     return render_template('menu.html')
+
 
 
 #EXTRAER POSTS DE FB
@@ -307,6 +308,22 @@ def score():
             #print(commentid, consult)
     
     return render_template('score.html')
+
+@app.route('/graph')
+def graph(chartID = 'chart_ID', chart_type = 'line', chart_height = 500):
+    cur = mysql.connection.cursor()
+    dato = cur.execute("SELECT count(*) FROM app.tbl_comments")
+    prueba = cur.fetchall()
+    cur.close()
+    print(prueba)
+    chart = {"renderTo": chartID, "type": chart_type, "height": chart_height,}
+    series = [{"name": 'Label1', "data": [1,2,3]}, {"name": 'Label2', "data": [prueba]}]
+    title = {"text": 'My Title'}
+    xAxis = {"categories": ['xAxis Data1', 'xAxis Data2', 'xAxis Data3']}
+    yAxis = {"title": {"text": 'yAxis Label'}}
+    return render_template('dash.html', chartID=chartID, chart=chart, series=series, title=title, xAxis=xAxis, yAxis=yAxis)
+
+
 
 if __name__ == '__main__':
     app.secret_key='secret123'
