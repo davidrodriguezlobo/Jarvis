@@ -13,7 +13,9 @@ app = Flask(__name__, static_url_path='/static')
 
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = '1234'
+app.config['MYSQL_PASSWORD'] = '123456'
+#app.config['MYSQL_PASSWORD'] = '1234'
+#app.config['MYSQL_PASSWORD'] = 'root'
 app.config['MYSQL_DB'] = 'app'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
@@ -312,16 +314,18 @@ def score():
 @app.route('/graph')
 def graph(chartID = 'chart_ID', chart_type = 'line', chart_height = 500):
     cur = mysql.connection.cursor()
-    dato = cur.execute("SELECT count(*) FROM app.tbl_comments")
+    cur.execute("SELECT count(*) FROM app.tbl_comments")
     prueba = cur.fetchall()
     cur.close()
-    print(prueba)
-    chart = {"renderTo": chartID, "type": chart_type, "height": chart_height,}
-    series = [{"name": 'Label1', "data": [1,2,3]}, {"name": 'Label2', "data": [prueba]}]
-    title = {"text": 'My Title'}
-    xAxis = {"categories": ['xAxis Data1', 'xAxis Data2', 'xAxis Data3']}
-    yAxis = {"title": {"text": 'yAxis Label'}}
-    return render_template('dash.html', chartID=chartID, chart=chart, series=series, title=title, xAxis=xAxis, yAxis=yAxis)
+    #print(prueba) -- Imprime lo que actualmente trae la consulta de la BD.
+    for x in prueba: #x puede ser cualquier cosa. "Prueba" es la variable en donde guardás la query.
+        count = x['count(*)'] #Descompone el diccionario que viene de la BD según el KEY que este trae. Imprimir "Prueba" para conocer los KEYS.
+        chart = {"renderTo": chartID, "type": chart_type, "height": chart_height,}
+        series = [{"name": 'Label1', "data": [1,2,3]}, {"name": 'Label2', "data": [count, count]}]
+        title = {"text": 'My Title'}
+        xAxis = {"categories": ['xAxis Data1', 'xAxis Data2', 'xAxis Data3']}
+        yAxis = {"title": {"text": 'yAxis Label'}}
+        return render_template('dash.html', chartID=chartID, chart=chart, series=series, title=title, xAxis=xAxis, yAxis=yAxis)
 
 
 
