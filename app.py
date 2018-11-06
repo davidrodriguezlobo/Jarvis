@@ -14,8 +14,8 @@ app = Flask(__name__, static_url_path='/static')
 
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-#app.config['MYSQL_PASSWORD'] = '123456'
-app.config['MYSQL_PASSWORD'] = '1234'
+app.config['MYSQL_PASSWORD'] = '123456'
+#app.config['MYSQL_PASSWORD'] = '1234'
 #app.config['MYSQL_PASSWORD'] = 'root'
 app.config['MYSQL_DB'] = 'app'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
@@ -315,32 +315,46 @@ def score():
 @app.route('/graph')
 def graph(chartID = 'chart_ID', chart_type = 'line', chart_height = 500):
     cur = mysql.connection.cursor()
-    cur.execute("SELECT count(*) FROM app.tbl_comments")
-    prueba = cur.fetchall()
-    cur.execute("select max(day(commentdate))  from  app.tbl_comments where month(commentdate) = month( curdate())-1")
+    cur.execute("select max(day(commentdate))  from  app.tbl_comments where month(commentdate) = month( curdate())")
     prueba2 = cur.fetchall()
     cur.close()
-    #now = datetime.datetime.now()
-    #year = now.year
-    #month = now.month
-    #num_days = calendar.monthrange(year, month)[1]
-    #days = [datetime.date(year, month, day) for day in range(1, num_days+1)]
-    #print(days)
-    #print(prueba) -- Imprime lo que actualmente trae la consulta de la BD.
+
     for y in prueba2:
-        count2 = y['max(day(commentdate))']    
-        #print(count2)
-        i = [1,2,3,4,5,6,7,8,9,10]
-    for x in prueba: #x puede ser cualquier cosa. "Prueba" es la variable en donde guardás la query.
-        count = x['count(*)'] #Descompone el diccionario que viene de la BD según el KEY que este trae. Imprimir "Prueba" para conocer los KEYS.
-        chart = {"renderTo": chartID, "type": chart_type, "height": chart_height,}
-        series = [{"name": 'Label1', "data": [1,2,3]}, {"name": 'Label2', "data": [count, count]}]
-        title = {"text": 'My Title'}
-        xAxis = {"categories": [1]}
-        yAxis = {"title": {"text": 'yAxis Label'}}
-        return render_template('dash.html', chartID=chartID, chart=chart, series=series, title=title, xAxis=xAxis, yAxis=yAxis)
+        maxday = y['max(day(commentdate))']
+        myLabels = []
+        myValues = []
+        n = maxday + 1
+        for i in range(1, n):
+            myLabels.append(i) #Agrega día 1 hasta maxday al array
+
+        for j in myLabels:
+            cur = mysql.connection.cursor()
+            cur.execute("SELECT count(*) FROM app.tbl_comments where month(commentdate) = month( curdate()) AND day(commentdate) = %s", ([j]))
+            prueba = cur.fetchall()
+            cur.close()
+            
+            for k in prueba:
+                value = (k['count(*)'])
+                myValues.append(value)
+  
+        labels = myLabels
+        values = myValues
+
+        labels1 = ["January","February","March","April","May","June","July","August"]
+        values1 = [10,9,8,7,6,4,7,8]
+        colors1 = [ "#F7464A", "#46BFBD", "#FDB45C", "#FEDCBA","#ABCDEF", "#DDDDDD", "#ABCABC"  ]
 
 
+
+        labels3 = ["January","February","March","April","May","June","July","August"]
+        values3 = [10,9,8,7,6,4,7,8]
+
+
+        return render_template('dash.html', values=values, labels=labels, set=zip(values1, labels1, colors1), values3=values3, labels3=labels3)
+
+
+
+        
 
 if __name__ == '__main__':
     app.secret_key='secret123'

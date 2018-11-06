@@ -1,37 +1,147 @@
-<html>
-<meta name="viewport" content = "width=device-width, initial-scale=1.0">
+<!DOCTYPE html>
+<html lang="en">
 <head>
+   <meta charset="utf-8" />
+   <title>Sentiment Analysis</title>
+   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+   
+   <!-- import plugin script -->
+   <script src='static/Chart.min.js'></script>
+ 
 </head>
+<body>
+<div class="container" align="center" >
+ <div class="col-xs-6">
+<h1>Comentarios Diarios</h1>
+<!-- bar chart canvas element -->
+<canvas id="chart" width="600" height="400"></canvas>
+ 
+<script>
+ 
+   // bar chart data
+   var barData = {
+   labels : [{% for item in labels %}
+                  "{{item}}",
+              {% endfor %}],
+   datasets : [
+      {
+            fillColor: "rgba(151,187,205,0.2)",
+            strokeColor: "rgba(151,187,205,1)",
+            pointColor: "rgba(151,187,205,1)",
+            pointStrokeColor: "#fff",
+            pointHighlightFill: "#fff",
+            pointHighlightStroke: "rgba(151,187,205,1)",
+            bezierCurve : false,
+            data : [{% for item in values %}
+                      {{item}},
+                    {% endfor %}]
+      }]
+   }
+ 
+    Chart.defaults.global.animationSteps = 50;
+    Chart.defaults.global.tooltipYPadding = 16;
+    Chart.defaults.global.tooltipCornerRadius = 0;
+    Chart.defaults.global.tooltipTitleFontStyle = "normal";
+    Chart.defaults.global.tooltipFillColor = "rgba(0,0,0,0.8)";
+    Chart.defaults.global.animationEasing = "easeOutBounce";
+    Chart.defaults.global.responsive = true;
+    Chart.defaults.global.scaleLineColor = "black";
+    Chart.defaults.global.scaleFontSize = 16;
+ 
+   // get bar chart canvas
+   var mychart = document.getElementById("chart").getContext("2d");
+ 
+   steps = 10
+   max = 10
+   // draw bar chart
+   var LineChartDemo = new Chart(mychart).Line(barData, {
+        scaleOverride: true,
+        scaleSteps: steps,
+        scaleStepWidth: Math.ceil(max / steps),
+        scaleStartValue: 0,
+        scaleShowVerticalLines: true,
+        scaleShowGridLines : true,
+        barShowStroke : true,
+        scaleShowLabels: true,
+        bezierCurve: false,
+ 
+   });
+ 
+ 
+</script>
+ </div>
+ <div class="col-xs-6">
+        <h1>Sentiment</h1><!-- bar chart canvas element -->
+        <canvas id="piechart" width="600" height="400"></canvas>
+        <script>
+           var pieData = [
+                    {% for item,label,colors in set %}
+                        {
+                            value: {{item}},
+                            label: "{{label}}",
+                            color : "{{colors}}"
+                        },
+                        {% endfor %}
+         
+         
+                 ];
 
-	<body>
-		<h3>{{ title }}</h3>
-		{% for p in paragraph %}
-		<p>{{ p }}</p>
-		{% endfor %}
-		
-		{% if pageType == 'about' %}
-		<p>Contact box thing is here</p>
-		{% else %}
-		<p>not about page</p>
-		{% endif %}
-		
-		<div id={{ chartID|safe }} class="chart" style="height: 100px; width: 500px"></div>
-		<script>
-			var chart_id = {{ chartID|safe }}
-			var series = {{ series|safe }}
-			var title = {{ title|safe }}
-			var xAxis = {{ xAxis|safe }}
-			var yAxis = {{ yAxis|safe }}
-			var chart = {{ chart|safe }}
-		</script>
-			<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
-			<script src="http://code.highcharts.com/highcharts.js"></script>
-			<script src="../static/graph.js"></script>
+           Chart.defaults.global.responsive = true;
+         
+           // get bar chart canvas
+           var mychart1 = document.getElementById("piechart").getContext("2d");
+         
+           steps = 10
+           max = 10
+           // draw pie chart
+           new Chart(document.getElementById("piechart").getContext("2d")).Pie(pieData);
+         
+        </script>
+ </div>
+ <div class="col-xs-6">
+        <h1>Flask Chart.js</h1><!-- bar chart canvas element -->
+        <canvas id="barchart" width="600" height="400"></canvas>
+        <script>
+           // bar chart data
+           var barData = {
+           labels : [{% for item in labels3 %}
+                          "{{item}}",
+                      {% endfor %}],
+           datasets : [
+              {
+                    fillColor: "rgba(151,187,205,0.2)",
+                    strokeColor: "rgba(151,187,205,1)",
+                    pointColor: "rgba(151,187,205,1)",
+                     data : [{% for item in values3 %}
+                              {{item}},
+                            {% endfor %}]
+              }
+              ]
+           }
 
-	</body>
-	
-	
-
-
-
-</html>		
+           Chart.defaults.global.responsive = true;
+         
+           // get bar chart canvas
+           var mychart = document.getElementById("barchart").getContext("2d");
+         
+           steps = 10
+           max = 10
+           // draw bar chart
+           new Chart(mychart).Bar(barData, {
+                scaleOverride: true,
+                scaleSteps: steps,
+                scaleStepWidth: Math.ceil(max / steps),
+                scaleStartValue: 0,
+                scaleShowVerticalLines: true,
+                scaleShowGridLines : true,
+                barShowStroke : true,
+                scaleShowLabels: true
+           });
+         
+        </script>
+ </div>
+</div>
+</body>
+</html>
