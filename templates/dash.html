@@ -11,10 +11,14 @@
    <script src='static/Chart.min.js'></script>
  
 </head>
-<body>
+<body background="/static/images/solid1.png">
+    <div align="center">
+    <h1>Dashboard</h1>
+    </div>
+    <br><br><br>
 <div class="container" align="center" >
  <div class="col-xs-6">
-<h1>Comentarios Diarios</h1>
+<h2>Comentarios Diarios</h2>
 <!-- bar chart canvas element -->
 <canvas id="chart" width="600" height="400"></canvas>
  
@@ -39,6 +43,7 @@
                     {% endfor %}]
       }]
    }
+   
  
     Chart.defaults.global.animationSteps = 50;
     Chart.defaults.global.tooltipYPadding = 16;
@@ -54,7 +59,7 @@
    var mychart = document.getElementById("chart").getContext("2d");
  
    steps = 10
-   max = 10
+   max = 20
    // draw bar chart
    var LineChartDemo = new Chart(mychart).Line(barData, {
         scaleOverride: true,
@@ -73,7 +78,7 @@
 </script>
  </div>
  <div class="col-xs-6">
-        <h1>Sentiment</h1><!-- bar chart canvas element -->
+        <h2>Comentarios Positivos y Negativos</h2><!-- bar chart canvas element -->
         <canvas id="piechart" width="600" height="400"></canvas>
         <script>
            var pieData = [
@@ -100,8 +105,9 @@
          
         </script>
  </div>
+ <!--
  <div class="col-xs-6">
-        <h1>Flask Chart.js</h1><!-- bar chart canvas element -->
+        <h1>Sentimiento Por Mes</h1><!-- bar chart canvas element
         <canvas id="barchart" width="600" height="400"></canvas>
         <script>
            // bar chart data
@@ -125,15 +131,16 @@
          
            // get bar chart canvas
            var mychart = document.getElementById("barchart").getContext("2d");
-         
-           steps = 10
-           max = 10
+           
+           steps = 2
+           max = 1
            // draw bar chart
            new Chart(mychart).Bar(barData, {
                 scaleOverride: true,
                 scaleSteps: steps,
                 scaleStepWidth: Math.ceil(max / steps),
-                scaleStartValue: 0,
+                scaleStartValue: -1,
+                beginAtZero: true,
                 scaleShowVerticalLines: true,
                 scaleShowGridLines : true,
                 barShowStroke : true,
@@ -142,6 +149,19 @@
          
         </script>
  </div>
+-->
 </div>
+
+<br><br><br>
+
+<div class="row" align="center">
+        <div class="col-sm">
+            <a href="/posts" class="btn btn-lg btn-default">Posts</a>
+    
+          <a href="/comments" class="btn btn-lg btn-default">Comments</a>
+        
+          <a href="/submenu" class="btn btn-lg btn-default">Menu</a>
+        </div>
+      </div>
 </body>
 </html>

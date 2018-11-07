@@ -101,13 +101,18 @@ def register():
 @app.route('/menu')
 def menu():
     return render_template('menu.html')
+@app.route('/submenu')
+def submenu():
+    return render_template('submenu.html')
 
 
 
 #EXTRAER POSTS DE FB
 @app.route('/posts')
 def posts():
-
+    contador = 0
+    contador1 = 0
+    contadortotal = 0
     #Token Temporal
     token = 'EAAIPgJKNjsgBAEZCGQLXDXbXQ7l4ZC4UxnWYKyDNPR3nuR6Ob8ORQoBhGKw4Kmhv7ZBIlXcCgIoUjjsdkCLQz8p1NY0LrmQSSTL7jXsEWnM3lOoZBCujCiyFor7smS1plLBKCLmQ8ZA0zDuP8agnM4MuMStxZATzYZD'
     
@@ -141,7 +146,6 @@ def posts():
 
             try:
                 if result < 1:
-
                     
                     if any(key in posts for key in ['message']):
                         post = posts['message']
@@ -150,7 +154,7 @@ def posts():
                         cur.execute("INSERT INTO tbl_posts(postid, postdate, posttext) VALUES(%s, %s, %s)", (id, date, post))
                         mysql.connection.commit()
                         cur.close()
-
+                        contador += 1
                         print('Nuevo Insert: ' +id)
 
                     elif any(key in posts for key in ['story']):
@@ -159,24 +163,25 @@ def posts():
                         cur.execute("INSERT INTO tbl_posts(postid, postdate, posttext) VALUES(%s, %s, %s)", (id, date, post))
                         mysql.connection.commit()
                         cur.close()
-
+                        contador1 += 1
                         print('Nuevo Insert: ' +id)
-                    
+                    contadortotal = contador + contador1
                 else:
                     print('Ya existe: '+id)
             except ValueError:
                     print('This is an error: ', ValueError)
                 
 
-        return render_template('/posts.html')
+        return render_template('/posts.html', contadortotal=contadortotal)
     except ValueError:
         print('This is an error', ValueError)
-        return render_template('/posts.html')
+        return render_template('/posts.html', contadortotal=contadortotal)
 
 
 #EXTRAER COMENTARIOS DE POST
 @app.route('/comments')
 def comment():
+    contadortotal = 0
 
     cur = mysql.connection.cursor()
     cur.execute("SELECT postid FROM tbl_posts ORDER BY postdate DESC")
@@ -216,7 +221,7 @@ def comment():
                         cur.execute("INSERT INTO tbl_comments(commentid, postid, commentdate, commenttext) VALUES(%s, %s, %s, %s)", (commentid, postid, commentdate, commenttext))
                         mysql.connection.commit()
                         cur.close()
-
+                        contadortotal += 1
                         print('Nuevo Insert: ' +commentid)
 
                     else:
@@ -229,11 +234,14 @@ def comment():
             
             print('No hay comentarios: ' +postid)
 
-    return render_template('comments.html')
+    return render_template('comments.html', contadortotal=contadortotal)
 
 @app.route('/score')
 def score():
 
+    contador1 = 0
+    contador2 = 0
+    contadortotal = 0
     cur = mysql.connection.cursor()
     cur.execute("SELECT ts.commentid, flag, score, scoredate, tc.commenttext FROM app.tbl_sentiment AS ts INNER JOIN app.tbl_comments AS tc ON ts.commentid = tc.commentid WHERE flag = '0'")
     result = cur.fetchall()
@@ -258,7 +266,6 @@ def score():
         for x in response.payload:
             cat = x.display_name
             score = x.classification.score
-
             cur = mysql.connection.cursor()
             dbcheck = cur.execute("SELECT * FROM tbl_score_dump WHERE commentid = %s", [commentid])
             mysql.connection.commit()
@@ -280,6 +287,7 @@ def score():
                         cur.execute("INSERT INTO tbl_score_dump(commentid, posscore, scoreflag) VALUES(%s, %s, %s)", ([commentid], [score], [scoreflag]))
                         mysql.connection.commit()
                         cur.close()
+                        contador1 += 1
 
                     elif cat == 'negativo':
                         scoreflag = '1'
@@ -288,6 +296,7 @@ def score():
                         cur.execute("INSERT INTO tbl_score_dump(commentid, negscore, scoreflag) VALUES(%s, %s, %s)", ([commentid], [score], [scoreflag]))
                         mysql.connection.commit()
                         cur.close()
+                        contador2 += 1
                 except ValueError:
                     print('This is an error: ', ValueError)
             
@@ -307,10 +316,8 @@ def score():
                         cur.execute("UPDATE tbl_score_dump SET negscore = %s WHERE commentid = %s", ([score], [commentid]))
                         mysql.connection.commit()
                         cur.close()
-            
-            #print(commentid, consult)
-    
-    return render_template('score.html')
+    contadortotal = contador1 + contador2
+    return render_template('score.html', contadortotal=contadortotal)
 
 @app.route('/graph')
 def graph(chartID = 'chart_ID', chart_type = 'line', chart_height = 500):
@@ -337,18 +344,89 @@ def graph(chartID = 'chart_ID', chart_type = 'line', chart_height = 500):
                 value = (k['count(*)'])
                 myValues.append(value)
   
+        #Graph Values
         labels = myLabels
         values = myValues
 
-        labels1 = ["January","February","March","April","May","June","July","August"]
-        values1 = [10,9,8,7,6,4,7,8]
-        colors1 = [ "#F7464A", "#46BFBD", "#FDB45C", "#FEDCBA","#ABCDEF", "#DDDDDD", "#ABCABC"  ]
+
+        #Pie Values
+
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT score FROM app.tbl_sentiment")
+        result = cur.fetchall()
+        cur.close()
+
+        pscore = 0
+        nscore = 0
+
+        for sentiment in result:
+            score = sentiment['score']
+            if score > 0:
+                pscore += 1
+            else:
+                nscore += 1
+
+
+        labels1 = ["Positivo","Negativo"]
+        values1 = [pscore,nscore]
+        colors1 = ["#46BFBD","#F7464A"]
+
+        #Bar Values
+        now = datetime.datetime.now()
+        month = now.month
+        year = now.year
+        #day = now.day
+
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT avg(score) FROM app.tbl_sentiment INNER JOIN app.tbl_comments ON app.tbl_sentiment.commentid = app.tbl_comments.commentid WHERE MONTH(commentdate) = %s",([month]))
+        test = cur.fetchall()
+        cur.execute("SELECT max(month) FROM app.tbl_monthsent WHERE year = %s", ([year]))
+        currentmonth = cur.fetchall()
+        cur.close
+
+        for month in currentmonth:
+            month = month['max(month)']
+            print(month)
+
+        for result in test:
+            avgsentiment = result['avg(score)']
+
+            cur = mysql.connection.cursor()
+            cur.execute("INSERT INTO tbl_monthsent(avgsentiment, month, year) VALUES(%s, %s, %s)", ([avgsentiment], [month], [year]))
+            mysql.connection.commit()
+            cur.close()
+
+        arr = []
+        if month == 1:
+            arr = ["Enero"]
+        elif month == 2:
+            arr = ["Enero", "Febrero"]
+        elif month == 3:
+            arr = ["Enero", "Febrero", "Marzo"]
+        elif month == 4:
+            arr = ["Enero", "Febrero", "Marzo", "Abril"]
+        elif month == 5:
+            arr = ["Enero", "Febrero", "Marzo", "Abril", "Mayo"]
+        elif month == 6:
+            arr = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio"]
+        elif month == 7:
+            arr = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio"]
+        elif month == 8:
+            arr = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto"]
+        elif month == 9:
+            arr = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre"]
+        elif month == 10:
+            arr = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre"]
+        elif month == 11:
+            arr = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre"]
+        elif month == 12:
+            arr = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
 
 
 
-        labels3 = ["January","February","March","April","May","June","July","August"]
-        values3 = [10,9,8,7,6,4,7,8]
-
+        
+        labels3 = arr
+        values3 = [0.65,1,0.4,-1,0.3]
 
         return render_template('dash.html', values=values, labels=labels, set=zip(values1, labels1, colors1), values3=values3, labels3=labels3)
 
