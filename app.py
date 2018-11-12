@@ -51,15 +51,15 @@ def login():
                 session['logged_in'] = True
                 session['username'] = username
 
-                flash('You are now logged in', 'success')
-                return redirect(url_for('menu'))
+                flash('You are now logged in')
+                return redirect(url_for('graph'))
             else:
-                error = 'Invalid Login'
-                return render_template('login.html', error=error)
+                flash('Invalid Login')
+                return render_template('login.html')
         
         else:
-            error = 'Username not Found'
-            return render_template('login.html', error=error)
+            flash('Username not Found')
+            return render_template('login.html')
         #Close COnnection
         cur.close()
     return render_template('login.html')
@@ -98,21 +98,12 @@ def register():
     return render_template('register.html', form=form)
 
 
-@app.route('/menu')
-def menu():
-    return render_template('menu.html')
-@app.route('/submenu')
-def submenu():
-    return render_template('submenu.html')
-
-
-
 #EXTRAER POSTS DE FB
 @app.route('/posts')
 def posts():
-    contador = 0
-    contador1 = 0
-    contadortotal = 0
+    pcontador = 0
+    pcontador1 = 0
+    pcontadortotal = 0
     #Token Temporal
     token = 'EAAIPgJKNjsgBAEZCGQLXDXbXQ7l4ZC4UxnWYKyDNPR3nuR6Ob8ORQoBhGKw4Kmhv7ZBIlXcCgIoUjjsdkCLQz8p1NY0LrmQSSTL7jXsEWnM3lOoZBCujCiyFor7smS1plLBKCLmQ8ZA0zDuP8agnM4MuMStxZATzYZD'
     
@@ -124,124 +115,124 @@ def posts():
 
     try:
         #Solicitud a FB
-        data_response = rqst.get(url)
+        p_data_response = rqst.get(url)
 
         #Se genera respuesta en formato JSON
-        data = data_response.json()
-        posts = data['posts']
+        p_data = p_data_response.json()
+        p_posts = p_data['posts']
 
         #hacemos un ciclo para iterar a traves de las respuestas de la api
-        for posts in posts['data']:
+        for p_posts in p_posts['data']:
 
             #Extraemos de la X respuesta su ID, y la fecha, luego formateamos la fecha para poder insertarla en BD.
 
-            id = posts['id']
-            tempdate = posts['created_time']
-            date = datetime.datetime.strptime(tempdate[:-5], '%Y-%m-%dT%H:%M:%S')
+            p_id = p_posts['id']
+            tempdate = p_posts['created_time']
+            p_date = datetime.datetime.strptime(tempdate[:-5], '%Y-%m-%dT%H:%M:%S')
 
             cur = mysql.connection.cursor()
-            result = cur.execute("SELECT * FROM tbl_posts WHERE postid = %s", [id])
+            p_result = cur.execute("SELECT * FROM tbl_posts WHERE postid = %s", [p_id])
             mysql.connection.commit()
             cur.close()
 
             try:
-                if result < 1:
+                if p_result < 1:
                     
-                    if any(key in posts for key in ['message']):
-                        post = posts['message']
+                    if any(key in p_posts for key in ['message']):
+                        post = p_posts['message']
 
                         cur = mysql.connection.cursor()
-                        cur.execute("INSERT INTO tbl_posts(postid, postdate, posttext) VALUES(%s, %s, %s)", (id, date, post))
+                        cur.execute("INSERT INTO tbl_posts(postid, postdate, posttext) VALUES(%s, %s, %s)", (p_id, p_date, post))
                         mysql.connection.commit()
                         cur.close()
-                        contador += 1
-                        print('Nuevo Insert: ' +id)
+                        pcontador += 1
+                        print('Nuevo Insert: ' +p_id)
 
-                    elif any(key in posts for key in ['story']):
-                        post = posts['story']
+                    elif any(key in p_posts for key in ['story']):
+                        post = p_posts['story']
                         cur = mysql.connection.cursor()
-                        cur.execute("INSERT INTO tbl_posts(postid, postdate, posttext) VALUES(%s, %s, %s)", (id, date, post))
+                        cur.execute("INSERT INTO tbl_posts(postid, postdate, posttext) VALUES(%s, %s, %s)", (p_id, p_date, post))
                         mysql.connection.commit()
                         cur.close()
-                        contador1 += 1
-                        print('Nuevo Insert: ' +id)
-                    contadortotal = contador + contador1
+                        pcontador1 += 1
+                        print('Nuevo Insert: ' +p_id)
+                    pcontadortotal = pcontador + pcontador1
                 else:
-                    print('Ya existe: '+id)
+                    print('Ya existe: '+p_id)
             except ValueError:
                     print('This is an error: ', ValueError)
                 
 
-        return render_template('/posts.html', contadortotal=contadortotal)
+        return render_template('/posts.html', pcontadortotal=pcontadortotal)
     except ValueError:
         print('This is an error', ValueError)
-        return render_template('/posts.html', contadortotal=contadortotal)
+        return render_template('/posts.html', pcontadortotal=pcontadortotal)
 
 
 #EXTRAER COMENTARIOS DE POST
 @app.route('/comments')
 def comment():
-    contadortotal = 0
+    ccontadortotal = 0
 
     cur = mysql.connection.cursor()
     cur.execute("SELECT postid FROM tbl_posts ORDER BY postdate DESC")
-    result = cur.fetchmany(size=15)
+    c_result = cur.fetchmany(size=15)
     cur.close()
 
-    for x in result:
-        postid = x['postid']
+    for c_x in c_result:
+        c_postid = c_x['postid']
         
 
         token = 'EAAIPgJKNjsgBAEZCGQLXDXbXQ7l4ZC4UxnWYKyDNPR3nuR6Ob8ORQoBhGKw4Kmhv7ZBIlXcCgIoUjjsdkCLQz8p1NY0LrmQSSTL7jXsEWnM3lOoZBCujCiyFor7smS1plLBKCLmQ8ZA0zDuP8agnM4MuMStxZATzYZD'
 
-        url = 'https://graph.facebook.com/v3.1/'+postid+'?fields=comments&access_token='+token
+        url = 'https://graph.facebook.com/v3.1/'+c_postid+'?fields=comments&access_token='+token
 
-        data_response = rqst.get(url)
+        c_data_response = rqst.get(url)
 
-        data = data_response.json()
+        c_data = c_data_response.json()
 
-        if any(key in data for key in ['comments']):
-            comments = data['comments']
+        if any(key in c_data for key in ['comments']):
+            c_comments = c_data['comments']
 
-            for comments in comments['data']:
-                commentid = comments['id']
-                tempdate = comments['created_time']
-                commentdate = datetime.datetime.strptime(tempdate[:-5], '%Y-%m-%dT%H:%M:%S')
-                commenttext = comments['message']
+            for c_comments in c_comments['data']:
+                c_commentid = c_comments['id']
+                c_tempdate = c_comments['created_time']
+                c_commentdate = datetime.datetime.strptime(c_tempdate[:-5], '%Y-%m-%dT%H:%M:%S')
+                c_commenttext = c_comments['message']
 
                 cur = mysql.connection.cursor()
-                dbcheck = cur.execute("SELECT * FROM tbl_comments WHERE commentid = %s", [commentid])
+                c_dbcheck = cur.execute("SELECT * FROM tbl_comments WHERE commentid = %s", [c_commentid])
                 mysql.connection.commit()
                 cur.close()
 
                 try:
-                    if dbcheck < 1:
+                    if c_dbcheck < 1:
 
                         cur = mysql.connection.cursor()
-                        cur.execute("INSERT INTO tbl_comments(commentid, postid, commentdate, commenttext) VALUES(%s, %s, %s, %s)", (commentid, postid, commentdate, commenttext))
+                        cur.execute("INSERT INTO tbl_comments(commentid, postid, commentdate, commenttext) VALUES(%s, %s, %s, %s)", (c_commentid, c_postid, c_commentdate, c_commenttext))
                         mysql.connection.commit()
                         cur.close()
-                        contadortotal += 1
-                        print('Nuevo Insert: ' +commentid)
+                        ccontadortotal += 1
+                        print('Nuevo Insert: ' +c_commentid)
 
                     else:
 
-                        print('Comentario ya existe: ' +commentid)
+                        print('Comentario ya existe: ' +c_commentid)
                 except ValueError:
                     print('This is an error: ', ValueError)
 
-        elif any(key in data for key in ['id']):
+        elif any(key in c_data for key in ['id']):
             
-            print('No hay comentarios: ' +postid)
+            print('No hay comentarios: ' +c_postid)
 
-    return render_template('comments.html', contadortotal=contadortotal)
+    return render_template('comments.html', ccontadortotal=ccontadortotal)
 
 @app.route('/score')
 def score():
 
     contador1 = 0
     contador2 = 0
-    contadortotal = 0
+    scontadortotal = 0
     cur = mysql.connection.cursor()
     cur.execute("SELECT ts.commentid, flag, score, scoredate, tc.commenttext FROM app.tbl_sentiment AS ts INNER JOIN app.tbl_comments AS tc ON ts.commentid = tc.commentid WHERE flag = '0'")
     result = cur.fetchall()
@@ -316,16 +307,21 @@ def score():
                         cur.execute("UPDATE tbl_score_dump SET negscore = %s WHERE commentid = %s", ([score], [commentid]))
                         mysql.connection.commit()
                         cur.close()
-    contadortotal = contador1 + contador2
-    return render_template('score.html', contadortotal=contadortotal)
+    scontadortotal = contador1 + contador2
+    return render_template('score.html', scontadortotal=scontadortotal)
 
 @app.route('/graph')
 def graph(chartID = 'chart_ID', chart_type = 'line', chart_height = 500):
+    
+    
+    
     cur = mysql.connection.cursor()
     cur.execute("select max(day(commentdate))  from  app.tbl_comments where month(commentdate) = month( curdate())")
     prueba2 = cur.fetchall()
     cur.close()
 
+
+    #daily comment count
     for y in prueba2:
         maxday = y['max(day(commentdate))']
         myLabels = []
@@ -347,7 +343,8 @@ def graph(chartID = 'chart_ID', chart_type = 'line', chart_height = 500):
         #Graph Values
         labels = myLabels
         values = myValues
-
+        print(labels)
+        print(values)
 
         #Pie Values
 
@@ -371,30 +368,11 @@ def graph(chartID = 'chart_ID', chart_type = 'line', chart_height = 500):
         values1 = [pscore,nscore]
         colors1 = ["#46BFBD","#F7464A"]
 
-        #Bar Values
+        #Monthly sentiment count
         now = datetime.datetime.now()
         month = now.month
         year = now.year
         #day = now.day
-
-        cur = mysql.connection.cursor()
-        cur.execute("SELECT avg(score) FROM app.tbl_sentiment INNER JOIN app.tbl_comments ON app.tbl_sentiment.commentid = app.tbl_comments.commentid WHERE MONTH(commentdate) = %s",([month]))
-        test = cur.fetchall()
-        cur.execute("SELECT max(month) FROM app.tbl_monthsent WHERE year = %s", ([year]))
-        currentmonth = cur.fetchall()
-        cur.close
-
-        for month in currentmonth:
-            month = month['max(month)']
-            print(month)
-
-        for result in test:
-            avgsentiment = result['avg(score)']
-
-            cur = mysql.connection.cursor()
-            cur.execute("INSERT INTO tbl_monthsent(avgsentiment, month, year) VALUES(%s, %s, %s)", ([avgsentiment], [month], [year]))
-            mysql.connection.commit()
-            cur.close()
 
         arr = []
         if month == 1:
@@ -421,18 +399,11 @@ def graph(chartID = 'chart_ID', chart_type = 'line', chart_height = 500):
             arr = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre"]
         elif month == 12:
             arr = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
-
-
-
         
         labels3 = arr
         values3 = [0.65,1,0.4,-1,0.3]
 
-        return render_template('dash.html', values=values, labels=labels, set=zip(values1, labels1, colors1), values3=values3, labels3=labels3)
-
-
-
-        
+        return render_template('index.html', values=values, labels=labels, set=zip(values1, labels1, colors1), values3=values3, labels3=labels3)
 
 if __name__ == '__main__':
     app.secret_key='secret123'
