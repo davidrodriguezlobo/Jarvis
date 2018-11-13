@@ -52,7 +52,7 @@ def login():
                 session['username'] = username
 
                 flash('You are now logged in')
-                return redirect(url_for('graph'))
+                return redirect(url_for('update'))
             else:
                 flash('Invalid Login')
                 return render_template('login.html')
@@ -64,6 +64,9 @@ def login():
         cur.close()
     return render_template('login.html')
 
+@app.route('/comments')
+def comments():
+    return render_template('table.html')
 
 class RegisterForm(Form):
     name = StringField('Name', [validators.length(min=1, max=50)])
@@ -98,9 +101,9 @@ def register():
     return render_template('register.html', form=form)
 
 
-#EXTRAER POSTS DE FB
-@app.route('/posts')
-def posts():
+#Actualiza toda la información, incluidos Posts, Comments y Sentiment.
+@app.route('/update')
+def update():
     pcontador = 0
     pcontador1 = 0
     pcontadortotal = 0
@@ -162,26 +165,17 @@ def posts():
             except ValueError:
                     print('This is an error: ', ValueError)
                 
-
-        return render_template('/posts.html', pcontadortotal=pcontadortotal)
     except ValueError:
         print('This is an error', ValueError)
-        return render_template('/posts.html', pcontadortotal=pcontadortotal)
 
-
-#EXTRAER COMENTARIOS DE POST
-@app.route('/comments')
-def comment():
     ccontadortotal = 0
-
     cur = mysql.connection.cursor()
     cur.execute("SELECT postid FROM tbl_posts ORDER BY postdate DESC")
-    c_result = cur.fetchmany(size=15)
+    c_result = cur.fetchmany(size=25)
     cur.close()
 
     for c_x in c_result:
         c_postid = c_x['postid']
-        
 
         token = 'EAAIPgJKNjsgBAEZCGQLXDXbXQ7l4ZC4UxnWYKyDNPR3nuR6Ob8ORQoBhGKw4Kmhv7ZBIlXcCgIoUjjsdkCLQz8p1NY0LrmQSSTL7jXsEWnM3lOoZBCujCiyFor7smS1plLBKCLmQ8ZA0zDuP8agnM4MuMStxZATzYZD'
 
@@ -225,11 +219,6 @@ def comment():
             
             print('No hay comentarios: ' +c_postid)
 
-    return render_template('comments.html', ccontadortotal=ccontadortotal)
-
-@app.route('/score')
-def score():
-
     contador1 = 0
     contador2 = 0
     scontadortotal = 0
@@ -243,83 +232,84 @@ def score():
         score = x['score']
         commenttext = x['commenttext']
 
-        project_id = 'complete-will-122319'
-        compute_region = 'us-central1'
-        model_id = 'TCN8431143772987397459'
+        if commenttext == '':
+            pass
+        else:
+            project_id = 'complete-will-122319'
+            compute_region = 'us-central1'
+            model_id = 'TCN8431143772987397459'
 
-        automl_client = automl.AutoMlClient()
-        prediction_client = automl.PredictionServiceClient()
-        model_full_id = automl_client.model_path(project_id, compute_region, model_id)
+            automl_client = automl.AutoMlClient()
+            prediction_client = automl.PredictionServiceClient()
+            model_full_id = automl_client.model_path(project_id, compute_region, model_id)
 
-        payload = {"text_snippet": {"content": str(commenttext), "mime_type": "text/txt"}}
-        response = prediction_client.predict(model_full_id, payload)
+            payload = {"text_snippet": {"content": str(commenttext), "mime_type": "text/txt"}}
+            response = prediction_client.predict(model_full_id, payload)
 
-        for x in response.payload:
-            cat = x.display_name
-            score = x.classification.score
-            cur = mysql.connection.cursor()
-            dbcheck = cur.execute("SELECT * FROM tbl_score_dump WHERE commentid = %s", [commentid])
-            mysql.connection.commit()
-            cur.execute("SELECT * FROM tbl_score_dump WHERE commentid = %s", [commentid])
-            consult = cur.fetchall()
-            cur.close()
+            for x in response.payload:
+                cat = x.display_name
+                score = x.classification.score
+                cur = mysql.connection.cursor()
+                dbcheck = cur.execute("SELECT * FROM tbl_score_dump WHERE commentid = %s", [commentid])
+                mysql.connection.commit()
+                cur.execute("SELECT * FROM tbl_score_dump WHERE commentid = %s", [commentid])
+                consult = cur.fetchall()
+                cur.close()
 
-            print(commentid, cat, score)
+                print(commentid, cat, score)
 
+                if dbcheck < 1:
 
-            if dbcheck < 1:
+                    try:
+                    
+                        if cat == 'positivo':
+                            scoreflag = '0'
 
-                try:
+                            cur = mysql.connection.cursor()
+                            cur.execute("INSERT INTO tbl_score_dump(commentid, posscore, scoreflag) VALUES(%s, %s, %s)", ([commentid], [score], [scoreflag]))
+                            mysql.connection.commit()
+                            cur.close()
+                            contador1 += 1
+
+                        elif cat == 'negativo':
+                            scoreflag = '1'
+
+                            cur = mysql.connection.cursor()
+                            cur.execute("INSERT INTO tbl_score_dump(commentid, negscore, scoreflag) VALUES(%s, %s, %s)", ([commentid], [score], [scoreflag]))
+                            mysql.connection.commit()
+                            cur.close()
+                            contador2 += 1
+                    except ValueError:
+                        print('This is an error: ', ValueError)
                 
-                    if cat == 'positivo':
-                        scoreflag = '0'
+                else:
+                    for x in consult:
+                        posscore = x['posscore']
+                        negscore = x['negscore']
 
-                        cur = mysql.connection.cursor()
-                        cur.execute("INSERT INTO tbl_score_dump(commentid, posscore, scoreflag) VALUES(%s, %s, %s)", ([commentid], [score], [scoreflag]))
-                        mysql.connection.commit()
-                        cur.close()
-                        contador1 += 1
+                        if posscore is None:
+                            cur = mysql.connection.cursor()
+                            cur.execute("UPDATE tbl_score_dump SET posscore = %s WHERE commentid = %s", ([score], [commentid]))
+                            mysql.connection.commit()
+                            cur.close()
 
-                    elif cat == 'negativo':
-                        scoreflag = '1'
-
-                        cur = mysql.connection.cursor()
-                        cur.execute("INSERT INTO tbl_score_dump(commentid, negscore, scoreflag) VALUES(%s, %s, %s)", ([commentid], [score], [scoreflag]))
-                        mysql.connection.commit()
-                        cur.close()
-                        contador2 += 1
-                except ValueError:
-                    print('This is an error: ', ValueError)
-            
-            else:
-                for x in consult:
-                    posscore = x['posscore']
-                    negscore = x['negscore']
-
-                    if posscore is None:
-                        cur = mysql.connection.cursor()
-                        cur.execute("UPDATE tbl_score_dump SET posscore = %s WHERE commentid = %s", ([score], [commentid]))
-                        mysql.connection.commit()
-                        cur.close()
-
-                    elif negscore is None:
-                        cur = mysql.connection.cursor()
-                        cur.execute("UPDATE tbl_score_dump SET negscore = %s WHERE commentid = %s", ([score], [commentid]))
-                        mysql.connection.commit()
-                        cur.close()
+                        elif negscore is None:
+                            cur = mysql.connection.cursor()
+                            cur.execute("UPDATE tbl_score_dump SET negscore = %s WHERE commentid = %s", ([score], [commentid]))
+                            mysql.connection.commit()
+                            cur.close()
     scontadortotal = contador1 + contador2
-    return render_template('score.html', scontadortotal=scontadortotal)
+    print('hola mundo')
+    return redirect(url_for('dashboard'))
 
-@app.route('/graph')
-def graph(chartID = 'chart_ID', chart_type = 'line', chart_height = 500):
-    
-    
+
+@app.route('/dashboard')
+def dashboard(chartID = 'chart_ID', chart_type = 'line', chart_height = 500):
     
     cur = mysql.connection.cursor()
     cur.execute("select max(day(commentdate))  from  app.tbl_comments where month(commentdate) = month( curdate())")
     prueba2 = cur.fetchall()
     cur.close()
-
 
     #daily comment count
     for y in prueba2:
@@ -343,67 +333,87 @@ def graph(chartID = 'chart_ID', chart_type = 'line', chart_height = 500):
         #Graph Values
         labels = myLabels
         values = myValues
-        print(labels)
-        print(values)
 
-        #Pie Values
+    #Pie Values
 
-        cur = mysql.connection.cursor()
-        cur.execute("SELECT score FROM app.tbl_sentiment")
-        result = cur.fetchall()
-        cur.close()
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT score FROM app.tbl_sentiment INNER JOIN app.tbl_comments ON app.tbl_sentiment.commentid = app.tbl_comments.commentid WHERE month(commentdate) = month(now()) AND month(commentdate) = month(now());")
+    result = cur.fetchall()
+    cur.close()
 
-        pscore = 0
-        nscore = 0
+    pscore = 0
+    nscore = 0
 
-        for sentiment in result:
-            score = sentiment['score']
-            if score > 0:
-                pscore += 1
-            else:
-                nscore += 1
+    for sentiment in result:
+        score = sentiment['score']
+        if score > 0:
+            pscore += 1
+        else:
+            nscore += 1
 
 
-        labels1 = ["Positivo","Negativo"]
-        values1 = [pscore,nscore]
-        colors1 = ["#46BFBD","#F7464A"]
+    labels1 = ["Positivo","Negativo"]
+    values1 = [pscore,nscore]
+    colors1 = ["#46BFBD","#F7464A"]
 
-        #Monthly sentiment count
-        now = datetime.datetime.now()
-        month = now.month
-        year = now.year
-        #day = now.day
+    #Monthly sentiment count
+    now = datetime.datetime.now()
+    month = now.month
+    year = now.year
+    #day = now.day
 
-        arr = []
-        if month == 1:
-            arr = ["Enero"]
-        elif month == 2:
-            arr = ["Enero", "Febrero"]
-        elif month == 3:
-            arr = ["Enero", "Febrero", "Marzo"]
-        elif month == 4:
-            arr = ["Enero", "Febrero", "Marzo", "Abril"]
-        elif month == 5:
-            arr = ["Enero", "Febrero", "Marzo", "Abril", "Mayo"]
-        elif month == 6:
-            arr = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio"]
-        elif month == 7:
-            arr = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio"]
-        elif month == 8:
-            arr = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto"]
-        elif month == 9:
-            arr = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre"]
-        elif month == 10:
-            arr = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre"]
-        elif month == 11:
-            arr = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre"]
-        elif month == 12:
-            arr = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+    cur = mysql.connection.cursor()
+    #cur.execute('SELECT * FROM app.tbl_monthsent WHERE month = %s AND year = %s', ([month],[year]))
+    cur.execute('SELECT * FROM app.tbl_monthsent')
+    monthly_sentiment = cur.fetchall()
+    cur.close()
+    avg_sent = []
+    for sentiment in monthly_sentiment:
+        m_sentiment = sentiment[('avgsentiment')]
+        avg_sent.append(m_sentiment)
+
+    arr = []
+    if month == 1:
+        arr = ["Enero"]
+    elif month == 2:
+        arr = ["Enero", "Febrero"]
+    elif month == 3:
+        arr = ["Enero", "Febrero", "Marzo"]
+    elif month == 4:
+        arr = ["Enero", "Febrero", "Marzo", "Abril"]
+    elif month == 5:
+        arr = ["Enero", "Febrero", "Marzo", "Abril", "Mayo"]
+    elif month == 6:
+        arr = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio"]
+    elif month == 7:
+        arr = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio"]
+    elif month == 8:
+        arr = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto"]
+    elif month == 9:
+        arr = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre"]
+    elif month == 10:
+        arr = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre"]
+    elif month == 11:
+        arr = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre"]
+    elif month == 12:
+        arr = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+    
+    cur = mysql.connection.cursor()
+    cur.execute('SELECT avgsentiment FROM app.tbl_monthsent WHERE month = %s AND year = %s', ([month],[year]))
+    mtdsent = cur.fetchall()
+    cur.close()
+
+    for mtd in mtdsent:
+        r = lambda f,p: f - f % p
+        mtdsentiment = mtd[('avgsentiment')]
+        mtdsentiment = mtdsentiment * 100
+        mtdsentiment = "%.2f" % mtdsentiment
         
-        labels3 = arr
-        values3 = [0.65,1,0.4,-1,0.3]
+    labels3 = arr
+    values3 = list(reversed(avg_sent))
 
-        return render_template('index.html', values=values, labels=labels, set=zip(values1, labels1, colors1), values3=values3, labels3=labels3)
+    
+    return render_template('dashboard.html', values=values, labels=labels, set=zip(values1, labels1, colors1), values3=values3, labels3=labels3, mtdsentiment=mtdsentiment)
 
 if __name__ == '__main__':
     app.secret_key='secret123'
