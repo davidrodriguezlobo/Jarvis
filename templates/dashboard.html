@@ -129,7 +129,7 @@
             <h3>Sentiment MTD</h3>
             <svg fill="currentColor" width="200px" height="200px" viewBox="0 0 1 1" class="demo-chart mdl-cell mdl-cell--3-col mdl-cell--3-col-desktop">
               <use xlink:href="#piechart" mask="url(#piemask)" />
-              <text x="0.5" y="0.5" font-family="Roboto" font-size="0.3" fill="#888" text-anchor="middle" dy="0.1">65<tspan dy="-0.07" font-size="0.2">K</tspan></text>
+              <text x="0.5" y="0.5" font-family="Roboto" font-size="0.3" fill="#888" text-anchor="middle" dy="0.1">{{fan_count}}<tspan dy="-0.07" font-size="0.2">{{tag}}</tspan></text>
             </svg>
             <h3>Followers MTD</h3>
           </div>
@@ -272,11 +272,15 @@
             </div>
             <div class="demo-separator mdl-cell--1-col"></div>
             <div>
-                <h3 class="hpadding" align="center">Monthly Sentiment Count</h3>
+                <h3 class="hpadding" align="center">Positive Word Cloud MTD</h3>
+                
+                  <img src="/static/wc.png" alt="Pos Word Cloud" width="335" height="255">
+                
             </div>
             <div class="demo-separator mdl-cell--1-col"></div>
             <div>
-                <h3 class="hpadding" align="center">Monthly Sentiment Count</h3>
+                <h3 class="hpadding" align="center">Negative Word Cloud MTD</h3>
+                <img src="/static/wc1.png" alt="Neg Word Cloud" width="335" height="255">
             </div>
           </div>
         </div>

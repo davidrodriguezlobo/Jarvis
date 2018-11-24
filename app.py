@@ -7,6 +7,11 @@ import json
 import datetime, calendar
 import requests as rqst
 from google.cloud import automl_v1beta1 as automl
+import sys
+from os import path
+import numpy as np
+from PIL import Image
+from wordcloud import WordCloud, STOPWORDS
 
 app = Flask(__name__, static_url_path='/static')
 
@@ -113,8 +118,25 @@ def update():
     #ID de Pagina, posiblemente se relacione con un textbox en interfaz para ingresarlo
     pageid = '433695893782683'
 
-    #formato de URL para la solicitud a FB
+    #formato de URL para la solicitud a FB 
     url = 'https://graph.facebook.com/v3.1/'+pageid+'?fields=posts&access_token='+token
+    url1 = 'https://graph.facebook.com/v3.1/'+pageid+'?fields=fan_count,talking_about_count&access_token='+token
+
+    try:
+
+        followersraw = rqst.get(url1)
+        followersdata = followersraw.json()
+        fan_count = followersdata['fan_count']
+        talking_about_count = followersdata['talking_about_count']
+
+        cur = mysql.connection.cursor()
+        cur.execute('UPDATE tbl_businessdata SET fan_count = %s, talking_about_count = %s WHERE month = month(now()) AND year = year(now())', (fan_count,talking_about_count))
+        mysql.connection.commit()
+        cur.close() 
+        
+
+    except ValueError:
+       print('This is an error', ValueError)
 
     try:
         #Solicitud a FB
@@ -149,7 +171,7 @@ def update():
                         mysql.connection.commit()
                         cur.close()
                         pcontador += 1
-                        print('Nuevo Insert: ' +p_id)
+                        #print('Nuevo Insert: ' +p_id)
 
                     elif any(key in p_posts for key in ['story']):
                         post = p_posts['story']
@@ -158,10 +180,11 @@ def update():
                         mysql.connection.commit()
                         cur.close()
                         pcontador1 += 1
-                        print('Nuevo Insert: ' +p_id)
+                        #print('Nuevo Insert: ' +p_id)
                     pcontadortotal = pcontador + pcontador1
                 else:
-                    print('Ya existe: '+p_id)
+                    pass
+                    #print('Ya existe: '+p_id)
             except ValueError:
                     print('This is an error: ', ValueError)
                 
@@ -207,17 +230,17 @@ def update():
                         mysql.connection.commit()
                         cur.close()
                         ccontadortotal += 1
-                        print('Nuevo Insert: ' +c_commentid)
+                        #print('Nuevo Insert: ' +c_commentid)
 
                     else:
-
-                        print('Comentario ya existe: ' +c_commentid)
+                        pass
+                        #print('Comentario ya existe: ' +c_commentid)
                 except ValueError:
                     print('This is an error: ', ValueError)
 
         elif any(key in c_data for key in ['id']):
-            
-            print('No hay comentarios: ' +c_postid)
+            pass
+            #print('No hay comentarios: ' +c_postid)
 
     contador1 = 0
     contador2 = 0
@@ -256,7 +279,7 @@ def update():
                 consult = cur.fetchall()
                 cur.close()
 
-                print(commentid, cat, score)
+                #print(commentid, cat, score)
 
                 if dbcheck < 1:
 
@@ -299,7 +322,6 @@ def update():
                             mysql.connection.commit()
                             cur.close()
     scontadortotal = contador1 + contador2
-    print('hola mundo')
     return redirect(url_for('dashboard'))
 
 
@@ -354,7 +376,7 @@ def dashboard(chartID = 'chart_ID', chart_type = 'line', chart_height = 500):
 
     labels1 = ["Positivo","Negativo"]
     values1 = [pscore,nscore]
-    colors1 = ["#46BFBD","#F7464A"]
+    colors1 = ["#6EA4BF","#41337A"]
 
     #Monthly sentiment count
     now = datetime.datetime.now()
@@ -412,8 +434,64 @@ def dashboard(chartID = 'chart_ID', chart_type = 'line', chart_height = 500):
     labels3 = arr
     values3 = list(reversed(avg_sent))
 
+    cur = mysql.connection.cursor()
+    cur.execute('SELECT fan_count FROM app.tbl_businessdata WHERE month = %s AND year = %s', ([month],[year]))
+    follower_count = cur.fetchall()
+    cur.close()
     
-    return render_template('dashboard.html', values=values, labels=labels, set=zip(values1, labels1, colors1), values3=values3, labels3=labels3, mtdsentiment=mtdsentiment)
+    for x in follower_count:
+        fan_count = x[('fan_count')]
+
+        if fan_count > 999:
+            fan_count = fan_count / 1000
+            tag = 'K'
+        elif fan_count > 999999:
+            fan_count = fan_count / 1000000
+            tag = 'M'
+        else:
+            tag = ''
+    
+
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT text FROM app.tbl_wordcloud WHERE year = year(now()) AND month = month(now()) AND polarity = 'positivo'")
+    poswordcloud = cur.fetchall()
+    cur.close()
+
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT text FROM app.tbl_wordcloud WHERE year = year(now()) AND month = month(now()) AND polarity = 'negativo'")
+    negwordcloud = cur.fetchall()
+    cur.close()
+
+    for ptext in poswordcloud:
+        poswords = ptext[('text')]
+    for ntext in negwordcloud:
+        negwords = ntext[('text')]
+
+    
+    # create numpy araay for wordcloud mask image
+    mask = np.array(Image.open(r"C:\Users\David\Desktop\Jarvis\static\cloud.png"))
+
+        # create set of stopwords	
+    stopwords = set(STOPWORDS)
+    new_words = ['un', 'una', 'unas', 'unos', 'uno', 'sobre', 'todo', 'también', 'tras', 'otro', 'algún', 'alguno', 'alguna', 'algunos', 'algunas', 'ser', 'es', 'soy', 'eres', 'somos', 'sois', 'estoy', 'esta', 'estamos', 'estais', 'estan', 'como', 'en', 'para', 'atras', 'porque', 'por qué', 'estado', 'estaba', 'ante', 'antes', 'siendo', 'ambos', 'pero', 'por', 'poder', 'puede', 'puedo', 'podemos', 'podeis', 'pueden', 'fui', 'fue', 'fuimos', 'fueron', 'hacer', 'hago', 'hace', 'hacemos', 'haceis', 'hacen', 'cada', 'fin', 'incluso', 'primero', 'desde', 'conseguir', 'consigo', 'consigue', 'consigues', 'conseguimos', 'consiguen', 'ir', 'voy', 'va', 'vamos', 'vais', 'van', 'vaya', 'gueno', 'ha', 'tener', 'tengo', 'tiene', 'tenemos', 'teneis', 'tienen', 'el', 'la', 'lo', 'las', 'los', 'su', 'aqui', 'mio', 'tuyo', 'ellos', 'ellas', 'nos', 'nosotros', 'vosotros', 'vosotras', 'si', 'dentro', 'solo', 'solamente', 'saber', 'sabes', 'sabe', 'sabemos', 'sabeis', 'saben', 'ultimo', 'largo', 'bastante', 'haces', 'muchos', 'aquellos', 'aquellas', 'sus', 'entonces', 'tiempo', 'verdad', 'verdadero', 'verdadera', 'cierto', 'ciertos', 'cierta', 'ciertas', 'intentar', 'intento', 'intenta', 'intentas', 'intentamos', 'intentais', 'intentan', 'dos', 'bajo', 'arriba', 'encima', 'usar', 'uso', 'usas', 'usa', 'usamos', 'usais', 'usan', 'emplear', 'empleo', 'empleas', 'emplean', 'ampleamos', 'empleais', 'valor', 'muy', 'era', 'eras', 'eramos', 'eran', 'modo', 'bien', 'cual', 'cuando', 'donde', 'mientras', 'quien', 'con', 'entre', 'sin', 'podria', 'podrias', 'podriamos', 'podrian', 'podriais', 'yo', 'aquel', 'yo', 'aquel', 'mis', 'tu', 'que']
+    stopwords.update(new_words)
+
+    print(stopwords)
+
+        # create wordcloud object
+    wc = WordCloud(background_color="white", max_words=200, mask=mask, stopwords=stopwords)
+    wc1 = WordCloud(background_color="white", max_words=200, mask=mask, stopwords=stopwords)
+        
+        # generate wordcloud
+    wc.generate(poswords)
+    wc1.generate(negwords)
+
+        # save wordcloud
+    wc.to_file(r"C:\Users\David\Desktop\Jarvis\static\wc.png")
+    wc1.to_file(r"C:\Users\David\Desktop\Jarvis\static\wc1.png")
+
+    
+    return render_template('dashboard.html', values=values, labels=labels, set=zip(values1, labels1, colors1), values3=values3, labels3=labels3, mtdsentiment=mtdsentiment, fan_count=fan_count, tag=tag)
 
 if __name__ == '__main__':
     app.secret_key='secret123'
