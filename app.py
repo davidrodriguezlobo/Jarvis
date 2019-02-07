@@ -71,7 +71,7 @@ def login():
 
 @app.route('/comments')
 def comments():
-    return render_template('table.html')
+    return render_template('comments.html')
 
 class RegisterForm(Form):
     name = StringField('Name', [validators.length(min=1, max=50)])
@@ -113,7 +113,7 @@ def update():
     pcontador1 = 0
     pcontadortotal = 0
     #Token Temporal
-    token = 'EAAIPgJKNjsgBAEZCGQLXDXbXQ7l4ZC4UxnWYKyDNPR3nuR6Ob8ORQoBhGKw4Kmhv7ZBIlXcCgIoUjjsdkCLQz8p1NY0LrmQSSTL7jXsEWnM3lOoZBCujCiyFor7smS1plLBKCLmQ8ZA0zDuP8agnM4MuMStxZATzYZD'
+    token = 'EAAIPgJKNjsgBAJHXGg2CGBJjexj7kKI1cfjAud0VVpKqCDOR9T39vZBhIRt51zM9pYLj3V1VgR1imTW2HQecKYAcrJZBG6slFqE336L7VjklWZADt1XJYHMywwEqOzjmU4ZAMZCXobLe0UQNGdUpZC2FBVgDQWZACGOeBXoRZBUZASgZDZD'
     
     #ID de Pagina, posiblemente se relacione con un textbox en interfaz para ingresarlo
     pageid = '433695893782683'
@@ -126,6 +126,7 @@ def update():
 
         followersraw = rqst.get(url1)
         followersdata = followersraw.json()
+        #print(followersdata)
         fan_count = followersdata['fan_count']
         talking_about_count = followersdata['talking_about_count']
 
@@ -171,7 +172,7 @@ def update():
                         mysql.connection.commit()
                         cur.close()
                         pcontador += 1
-                        #print('Nuevo Insert: ' +p_id)
+                        #print('Nuevo Post Insert: ' +p_id)
 
                     elif any(key in p_posts for key in ['story']):
                         post = p_posts['story']
@@ -180,16 +181,18 @@ def update():
                         mysql.connection.commit()
                         cur.close()
                         pcontador1 += 1
-                        #print('Nuevo Insert: ' +p_id)
+                        #print('Nuevo Post Insert: ' +p_id)
                     pcontadortotal = pcontador + pcontador1
                 else:
                     pass
-                    #print('Ya existe: '+p_id)
+                    #print('Ya existe Post: '+p_id)
             except ValueError:
                     print('This is an error: ', ValueError)
                 
     except ValueError:
         print('This is an error', ValueError)
+
+   
 
     ccontadortotal = 0
     cur = mysql.connection.cursor()
@@ -200,7 +203,7 @@ def update():
     for c_x in c_result:
         c_postid = c_x['postid']
 
-        token = 'EAAIPgJKNjsgBAEZCGQLXDXbXQ7l4ZC4UxnWYKyDNPR3nuR6Ob8ORQoBhGKw4Kmhv7ZBIlXcCgIoUjjsdkCLQz8p1NY0LrmQSSTL7jXsEWnM3lOoZBCujCiyFor7smS1plLBKCLmQ8ZA0zDuP8agnM4MuMStxZATzYZD'
+        token = 'EAAIPgJKNjsgBAJHXGg2CGBJjexj7kKI1cfjAud0VVpKqCDOR9T39vZBhIRt51zM9pYLj3V1VgR1imTW2HQecKYAcrJZBG6slFqE336L7VjklWZADt1XJYHMywwEqOzjmU4ZAMZCXobLe0UQNGdUpZC2FBVgDQWZACGOeBXoRZBUZASgZDZD'
 
         url = 'https://graph.facebook.com/v3.1/'+c_postid+'?fields=comments&access_token='+token
 
@@ -222,15 +225,19 @@ def update():
                 mysql.connection.commit()
                 cur.close()
 
+                print(c_commentid, c_dbcheck)
+                
                 try:
                     if c_dbcheck < 1:
+
+
 
                         cur = mysql.connection.cursor()
                         cur.execute("INSERT INTO tbl_comments(commentid, postid, commentdate, commenttext) VALUES(%s, %s, %s, %s)", (c_commentid, c_postid, c_commentdate, c_commenttext))
                         mysql.connection.commit()
                         cur.close()
                         ccontadortotal += 1
-                        #print('Nuevo Insert: ' +c_commentid)
+                        print('Nuevo Insert Comentario: ' +c_commentid)
 
                     else:
                         pass
@@ -240,7 +247,19 @@ def update():
 
         elif any(key in c_data for key in ['id']):
             pass
-            #print('No hay comentarios: ' +c_postid)
+            #print('No hay comentarios para post: ' +c_postid)
+
+
+
+
+
+
+
+
+
+    
+
+
 
     contador1 = 0
     contador2 = 0
@@ -476,13 +495,14 @@ def dashboard(chartID = 'chart_ID', chart_type = 'line', chart_height = 500):
     new_words = ['un', 'una', 'unas', 'unos', 'uno', 'sobre', 'todo', 'también', 'tras', 'otro', 'algún', 'alguno', 'alguna', 'algunos', 'algunas', 'ser', 'es', 'soy', 'eres', 'somos', 'sois', 'estoy', 'esta', 'estamos', 'estais', 'estan', 'como', 'en', 'para', 'atras', 'porque', 'por qué', 'estado', 'estaba', 'ante', 'antes', 'siendo', 'ambos', 'pero', 'por', 'poder', 'puede', 'puedo', 'podemos', 'podeis', 'pueden', 'fui', 'fue', 'fuimos', 'fueron', 'hacer', 'hago', 'hace', 'hacemos', 'haceis', 'hacen', 'cada', 'fin', 'incluso', 'primero', 'desde', 'conseguir', 'consigo', 'consigue', 'consigues', 'conseguimos', 'consiguen', 'ir', 'voy', 'va', 'vamos', 'vais', 'van', 'vaya', 'gueno', 'ha', 'tener', 'tengo', 'tiene', 'tenemos', 'teneis', 'tienen', 'el', 'la', 'lo', 'las', 'los', 'su', 'aqui', 'mio', 'tuyo', 'ellos', 'ellas', 'nos', 'nosotros', 'vosotros', 'vosotras', 'si', 'dentro', 'solo', 'solamente', 'saber', 'sabes', 'sabe', 'sabemos', 'sabeis', 'saben', 'ultimo', 'largo', 'bastante', 'haces', 'muchos', 'aquellos', 'aquellas', 'sus', 'entonces', 'tiempo', 'verdad', 'verdadero', 'verdadera', 'cierto', 'ciertos', 'cierta', 'ciertas', 'intentar', 'intento', 'intenta', 'intentas', 'intentamos', 'intentais', 'intentan', 'dos', 'bajo', 'arriba', 'encima', 'usar', 'uso', 'usas', 'usa', 'usamos', 'usais', 'usan', 'emplear', 'empleo', 'empleas', 'emplean', 'ampleamos', 'empleais', 'valor', 'muy', 'era', 'eras', 'eramos', 'eran', 'modo', 'bien', 'cual', 'cuando', 'donde', 'mientras', 'quien', 'con', 'entre', 'sin', 'podria', 'podrias', 'podriamos', 'podrian', 'podriais', 'yo', 'aquel', 'yo', 'aquel', 'mis', 'tu', 'que']
     stopwords.update(new_words)
 
-    print(stopwords)
+    #print(stopwords)
 
         # create wordcloud object
     wc = WordCloud(background_color="white", max_words=200, mask=mask, stopwords=stopwords)
     wc1 = WordCloud(background_color="white", max_words=200, mask=mask, stopwords=stopwords)
         
         # generate wordcloud
+    print(poswords)
     wc.generate(poswords)
     wc1.generate(negwords)
 

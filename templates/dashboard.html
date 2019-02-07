@@ -1,20 +1,4 @@
 <!doctype html>
-<!--
-  Material Design Lite
-  Copyright 2015 Google Inc. All rights reserved.
-
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-
-      https://www.apache.org/licenses/LICENSE-2.0
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License
--->
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -119,170 +103,229 @@
       <!--Menu Lateral-->
       <!--Contenedor Central-->
       <main class="mdl-layout__content mdl-color--grey-100">
-        <div class="mdl-grid demo-content">
-          <!--Top Cards-->
-          <div class="demo-charts mdl-color--white mdl-shadow--2dp mdl-cell mdl-cell--12-col mdl-grid">
-            <svg fill="currentColor" width="200px" height="200px" viewBox="0 0 1 1" class="demo-chart mdl-cell mdl-cell--3-col mdl-cell--3-col-desktop">
-              <use xlink:href="#piechart" mask="url(#piemask)" />
-              <text x="0.5" y="0.5" font-family="Roboto" font-size="0.2" fill="#888" text-anchor="middle" dy="0.1">{{mtdsentiment}}<tspan font-size="0.2" dy="-0.07">%</tspan></text>
-            </svg>
-            <h3>Sentiment MTD</h3>
-            <svg fill="currentColor" width="200px" height="200px" viewBox="0 0 1 1" class="demo-chart mdl-cell mdl-cell--3-col mdl-cell--3-col-desktop">
-              <use xlink:href="#piechart" mask="url(#piemask)" />
-              <text x="0.5" y="0.5" font-family="Roboto" font-size="0.3" fill="#888" text-anchor="middle" dy="0.1">{{fan_count}}<tspan dy="-0.07" font-size="0.2">{{tag}}</tspan></text>
-            </svg>
-            <h3>Followers MTD</h3>
+        <!--Tab Controls-->
+        <div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
+          <div class="mdl-tabs__tab-bar">
+              <a href="#overview-panel" class="mdl-tabs__tab is-active">Overview</a>
+              <a href="#week-panel" class="mdl-tabs__tab">Week</a>
+              <a href="#month-panel" class="mdl-tabs__tab">Month</a>
+              <a href="#quarter-panel" class="mdl-tabs__tab">Quarter</a>
+              <a href="#year-panel" class="mdl-tabs__tab">Year</a>
           </div>
-          <!--Top Cards-->
-
-
-
-          <!--Middle Left Cards-->
-          <div class="demo-graphs mdl-shadow--2dp mdl-color--white mdl-cell mdl-cell--8-col">
-          <div>
-          <h3 align="center">Monthly Sentiment</h3>
-            <canvas id="chart"  width="600" height="400"></canvas> 
-              <script>
-              
-                // bar chart data
-                var barData = {
-                labels : [{% for item in labels3 %}
-                                "{{item}}",
-                            {% endfor %}],
-                datasets : [
-                    {   
-                          fillColor: "rgba(151,187,205,0.2)",
-                          strokeColor: "rgba(151,187,205,1)",
-                          pointColor: "rgba(151,187,205,1)",
-                          pointStrokeColor: "#fff",
-                          pointHighlightFill: "#fff",
-                          pointHighlightStroke: "rgba(151,187,205,1)",
-                          bezierCurve : false,
-                          data : [{% for item in values3 %}
-                                    {{item}},
-                                  {% endfor %}]
-                    }]
-                }
-                
-                  Chart.defaults.global.animationSteps = 50;
-                  Chart.defaults.global.tooltipYPadding = 16;
-                  Chart.defaults.global.tooltipCornerRadius = 0;
-                  Chart.defaults.global.tooltipTitleFontStyle = "normal";
-                  Chart.defaults.global.tooltipFillColor = "rgba(0,0,0,0.8)";
-                  Chart.defaults.global.animationEasing = "easeOutCubic";
-                  Chart.defaults.global.responsive = true;
-                  Chart.defaults.global.scaleLineColor = "black";
-                  Chart.defaults.global.scaleFontSize = 12;
-              
-                // get bar chart canvas
-                var mychart = document.getElementById("chart").getContext("2d");
-              
-                steps = 10
-                max = 10000
-                // draw bar chart
-                var LineChartDemo = new Chart(mychart).Line(barData, {
-                      scaleOverride: false,
-                      scaleSteps: steps,
-                      scaleStepWidth: Math.ceil(max / steps),
-                      scaleStartValue: 0,
-                      scaleShowVerticalLines: true,
-                      scaleShowGridLines : true,
-                      barShowStroke : true,
-                      scaleShowLabels: true,
-                      bezierCurve: true,
-                      
-              
-                });
-              
-              
-              </script>
-            
-          <h3 align="center">Daily Comment Count</h3>
-            <canvas id="barchart" width="600" height="400"></canvas>
-              <script>
-                // bar chart data
-                var barData = {
-                labels : [{% for item in labels %}
-                                "{{item}}",
-                            {% endfor %}],
-                datasets : [
-                    {
-                          fillColor: "rgba(151,187,205,0.2)",
-                          strokeColor: "rgba(151,187,205,1)",
-                          pointColor: "rgba(151,187,205,1)",
-                          data : [{% for item in values %}
-                                    {{item}},
-                                  {% endfor %}]
-                    }
-                    ]
-                }
-
-                Chart.defaults.global.responsive = true;
-              
-                // get bar chart canvas
-                var mychart = document.getElementById("barchart").getContext("2d");
-                
-                steps = 2
-                max = 1
-                // draw bar chart
-                new Chart(mychart).Bar(barData, {
-                      scaleOverride: false,
-                      scaleSteps: steps,
-                      scaleStepWidth: Math.ceil(max / steps),
-                      scaleStartValue: -1,
-                      beginAtZero: true,
-                      scaleShowVerticalLines: true,
-                      scaleShowGridLines : true,
-                      barShowStroke : true,
-                      scaleShowLabels: true
-                });
-              
-              </script>
-          </div>
-          </div>
-          <!--Middle Left Cards-->
-
-          <div class="demo-graphs mdl-shadow--2dp mdl-color--white mdl-cell mdl-cell--4-col mdl-cell--8-col-tablet mdl-grid mdl-grid--no-spacing">
-            <div>
-              <h3 class="hpadding" align="center">Monthly Sentiment Count</h3>
-              <canvas id="pie1" width="600" height="400"></canvas>
-              <script>
-                var pieData = 
-                [
-                  {% for item,label,colors in set %}
-                    {
-                      value: {{item}},
-                      label: "{{label}}",
-                      color : "{{colors}}"
-                    },
-                  {% endfor %}
-                ];
-
-                Chart.defaults.global.responsive = true;
+        <!--End Tab Controls-->
+        <!--Start Overview Tab-->
           
-                // get bar chart canvas
-                var mychart1 = document.getElementById("pie1").getContext("2d");
-                
-                steps = 10
-                max = 10
-                // draw pie chart
-                new Chart(document.getElementById("pie1").getContext("2d")).Pie(pieData);
-         
-              </script>  
-            </div>
-            <div class="demo-separator mdl-cell--1-col"></div>
-            <div>
-                <h3 class="hpadding" align="center">Positive Word Cloud MTD</h3>
-                
-                  <img src="/static/wc.png" alt="Pos Word Cloud" width="335" height="255">
-                
-            </div>
-            <div class="demo-separator mdl-cell--1-col"></div>
-            <div>
-                <h3 class="hpadding" align="center">Negative Word Cloud MTD</h3>
-                <img src="/static/wc1.png" alt="Neg Word Cloud" width="335" height="255">
-            </div>
+          <div class="mdl-tabs__panel is-active" id="overview-panel">
+              <div class="mdl-grid demo-content">
+                  <!--Top Cards-->
+                  <div class="demo-charts mdl-color--white mdl-shadow--2dp mdl-cell mdl-cell--12-col mdl-grid">
+                    <svg fill="currentColor" width="200px" height="200px" viewBox="0 0 1 1" class="demo-chart mdl-cell mdl-cell--3-col mdl-cell--3-col-desktop">
+                      <use xlink:href="#piechart" mask="url(#piemask)" />
+                      <text x="0.5" y="0.5" font-family="Roboto" font-size="0.2" fill="#888" text-anchor="middle" dy="0.1">{{mtdsentiment}}<tspan font-size="0.2" dy="-0.07">%</tspan></text>
+                    </svg>
+                    <h3>Sentiment MTD</h3>
+                    <svg fill="currentColor" width="200px" height="200px" viewBox="0 0 1 1" class="demo-chart mdl-cell mdl-cell--3-col mdl-cell--3-col-desktop">
+                      <use xlink:href="#piechart" mask="url(#piemask)" />
+                      <text x="0.5" y="0.5" font-family="Roboto" font-size="0.3" fill="#888" text-anchor="middle" dy="0.1">{{fan_count}}<tspan dy="-0.07" font-size="0.2">{{tag}}</tspan></text>
+                    </svg>
+                    <h3>Followers MTD</h3>
+                  </div>
+                  <!--Top Cards-->
+                  <!--Middle Left Cards-->
+                  <div class="demo-graphs mdl-shadow--2dp mdl-color--white mdl-cell mdl-cell--8-col">
+                  <div>
+                  <h3 align="center">Monthly Sentiment</h3>
+                    <canvas id="chart"  width="600" height="400"></canvas> 
+                      <script>
+                      
+                        // bar chart data
+                        var barData = {
+                        labels : [{% for item in labels3 %}
+                                        "{{item}}",
+                                    {% endfor %}],
+                        datasets : [
+                            {   
+                                  fillColor: "rgba(151,187,205,0.2)",
+                                  strokeColor: "rgba(151,187,205,1)",
+                                  pointColor: "rgba(151,187,205,1)",
+                                  pointStrokeColor: "#fff",
+                                  pointHighlightFill: "#fff",
+                                  pointHighlightStroke: "rgba(151,187,205,1)",
+                                  bezierCurve : false,
+                                  data : [{% for item in values3 %}
+                                            {{item}},
+                                          {% endfor %}]
+                            }]
+                        }
+                        
+                          Chart.defaults.global.animationSteps = 50;
+                          Chart.defaults.global.tooltipYPadding = 16;
+                          Chart.defaults.global.tooltipCornerRadius = 0;
+                          Chart.defaults.global.tooltipTitleFontStyle = "normal";
+                          Chart.defaults.global.tooltipFillColor = "rgba(0,0,0,0.8)";
+                          Chart.defaults.global.animationEasing = "easeOutCubic";
+                          Chart.defaults.global.responsive = true;
+                          Chart.defaults.global.scaleLineColor = "black";
+                          Chart.defaults.global.scaleFontSize = 12;
+                      
+                        // get bar chart canvas
+                        var mychart = document.getElementById("chart").getContext("2d");
+                      
+                        steps = 10
+                        max = 10000
+                        // draw bar chart
+                        var LineChartDemo = new Chart(mychart).Line(barData, {
+                              scaleOverride: false,
+                              scaleSteps: steps,
+                              scaleStepWidth: Math.ceil(max / steps),
+                              scaleStartValue: 0,
+                              scaleShowVerticalLines: true,
+                              scaleShowGridLines : true,
+                              barShowStroke : true,
+                              scaleShowLabels: true,
+                              bezierCurve: true,
+                              
+                      
+                        });
+                      
+                      
+                      </script>
+                    
+                  <h3 align="center">Daily Comment Count</h3>
+                    <canvas id="barchart" width="600" height="400"></canvas>
+                      <script>
+                        // bar chart data
+                        var barData = {
+                        labels : [{% for item in labels %}
+                                        "{{item}}",
+                                    {% endfor %}],
+                        datasets : [
+                            {
+                                  fillColor: "rgba(151,187,205,0.2)",
+                                  strokeColor: "rgba(151,187,205,1)",
+                                  pointColor: "rgba(151,187,205,1)",
+                                  data : [{% for item in values %}
+                                            {{item}},
+                                          {% endfor %}]
+                            }
+                            ]
+                        }
+        
+                        Chart.defaults.global.responsive = true;
+                      
+                        // get bar chart canvas
+                        var mychart = document.getElementById("barchart").getContext("2d");
+                        
+                        steps = 2
+                        max = 1
+                        // draw bar chart
+                        new Chart(mychart).Bar(barData, {
+                              scaleOverride: false,
+                              scaleSteps: steps,
+                              scaleStepWidth: Math.ceil(max / steps),
+                              scaleStartValue: -1,
+                              beginAtZero: true,
+                              scaleShowVerticalLines: true,
+                              scaleShowGridLines : true,
+                              barShowStroke : true,
+                              scaleShowLabels: true
+                        });
+                      
+                      </script>
+                  </div>
+                  </div>
+                  <!--Middle Left Cards-->
+        
+                  <div class="demo-graphs mdl-shadow--2dp mdl-color--white mdl-cell mdl-cell--4-col mdl-cell--8-col-tablet mdl-grid mdl-grid--no-spacing">
+                    
+                      <h3 class="hpadding" align="center">Monthly Sentiment Count</h3>
+                      <canvas id="pie1" width="600" height="400"></canvas>
+                      <script>
+                        var pieData = 
+                        [
+                          {% for item,label,colors in set %}
+                            {
+                              value: {{item}},
+                              label: "{{label}}",
+                              color : "{{colors}}"
+                            },
+                          {% endfor %}
+                        ];
+        
+                        Chart.defaults.global.responsive = true;
+                  
+                        // get bar chart canvas
+                        var mychart1 = document.getElementById("pie1").getContext("2d");
+                        
+                        steps = 10
+                        max = 10
+                        // draw pie chart
+                        new Chart(document.getElementById("pie1").getContext("2d")).Pie(pieData);
+                 
+                      </script>  
+                    
+                    <div class="demo-separator mdl-cell--1-col"></div>
+                    <div>
+                        <h3 class="hpadding" align="center">Positive Word Cloud MTD</h3>
+                        
+                          <img src="/static/wc.png" alt="Pos Word Cloud" width="335" height="255">
+                        
+                    </div>
+                    <div class="demo-separator mdl-cell--1-col"></div>
+                    <div>
+                        <h3 class="hpadding" align="center">Negative Word Cloud MTD</h3>
+                        <img src="/static/wc1.png" alt="Neg Word Cloud" width="335" height="255">
+                    </div>
+                  </div>
+                </div>
           </div>
+        
+        <!--End Overview Tab-->
+        <!--Start Week Tab-->
+        
+            <div class="mdl-tabs__panel" id="week-panel">
+            <ul>
+              <li>John</li>
+              <li>Shepard</li>
+              <li>Liara</li>
+              <li>Miranda</li>
+            </ul>
+          </div>
+        
+        <!--End Week Tab-->
+        <!--Start Month Tab-->
+        
+          <div class="mdl-tabs__panel" id="month-panel">
+            <ul>
+              <li>Tywin</li>
+              <li>Cersei</li>
+              <li>Jamie</li>
+              <li>Tyrion</li>
+            </ul>
+          </div>
+        
+        <!--End Month Tab-->
+        <!--Start Quarter Tab-->
+        
+          <div class="mdl-tabs__panel" id="quarter-panel">
+            <ul>
+              <li>Viserys</li>
+              <li>Daenerys</li>
+            </ul>
+          </div>
+        
+        <!--End Quarter Tab-->
+        <!--Start Year Tab-->
+        
+          <div class="mdl-tabs__panel" id="year-panel">
+            <ul>
+              <li>TEST</li>
+              <li>TEST2</li>
+            </ul>
+          </div>
+        
+        <!--End Year Tab-->
+        
         </div>
       </main>
       <!--Contenedor Central-->
